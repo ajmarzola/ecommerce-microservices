@@ -179,5 +179,84 @@ namespace CatalogService.Tests.Controllers
             // Assert
             Assert.IsType<NotFoundResult>(result);
         }
+
+        [Fact]
+        public async Task PostProduct_CreatesNewProduct_WithCalculatedPrice()
+        {
+            // Arrange
+            using var context = new CatalogContext(_dbContextOptions);
+            var controller = new ProductsController(context);
+            var newProduct = new Product
+            {
+                Name = "Product A",
+                Description = "Test Product",
+                CostPrice = 100,
+                ProfitMargin = 60, // Above 55%
+                SalePrice = 180,  // Greater than Price
+                PromotionalPrice = 160, // Greater than Price
+                Category = "Category A",
+                Stock = 10
+            };
+
+            // Act
+            var result = await controller.PostProduct(newProduct);
+
+            // Assert
+            var actionResult = Assert.IsType<ActionResult<Product>>(result);
+            var createdProduct = Assert.IsType<Product>(actionResult.Value);
+
+            Assert.Equal(160, createdProduct.Price); // CostPrice + 60% ProfitMargin
+            Assert.Equal(1, context.Products.Count());
+        }
+
+        [Fact]
+        public async Task PostProduct_ReturnsBadRequest_WhenProfitMarginIsBelow55()
+        {
+            // Arrange
+            using var context = new CatalogContext(_dbContextOptions);
+            var controller = new ProductsController(context);
+            var newProduct = new Product
+            {
+                Name = "Product A",
+                Description = "Test Product",
+                CostPrice = 100,
+                ProfitMargin = 50, // Below 55%
+                SalePrice = 180,
+                PromotionalPrice = 160,
+                Category = "Category A",
+                Stock = 10
+            };
+
+            // Act
+            var result = await controller.PostProduct(newProduct);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
+
+        [Fact]
+        public async Task PostProduct_ReturnsBadRequest_WhenSalePriceOrPromotionalPriceIsInvalid()
+        {
+            // Arrange
+            using var context = new CatalogContext(_dbContextOptions);
+            var controller = new ProductsController(context);
+            var newProduct = new Product
+            {
+                Name = "Product A",
+                Description = "Test Product",
+                CostPrice = 100,
+                ProfitMargin = 60, // Above 55%
+                SalePrice = 150,  // Less than Price
+                PromotionalPrice = 140, // Less than Price
+                Category = "Category A",
+                Stock = 10
+            };
+
+            // Act
+            var result = await controller.PostProduct(newProduct);
+
+            // Assert
+            Assert.IsType<BadRequestObjectResult>(result);
+        }
     }
 }

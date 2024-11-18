@@ -34,6 +34,13 @@ namespace CatalogService.Controllers
         [HttpPost]
         public async Task<ActionResult<Product>> PostProduct(Product product)
         {
+            product.CalculatePrice();
+
+            if (!product.ValidatePrices())
+            {
+                return BadRequest("SalePrice and PromotionalPrice must be greater than Price.");
+            }
+
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
@@ -43,16 +50,27 @@ namespace CatalogService.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProduct(int id, Product product)
         {
-            if (id != product.Id) return BadRequest();
+            if (id != product.Id)
+                return BadRequest();
+
+            product.CalculatePrice();
+
+            if (!product.ValidatePrices())
+            {
+                return BadRequest("SalePrice and PromotionalPrice must be greater than Price.");
+            }
 
             _context.Entry(product).State = EntityState.Modified;
+
             try
             {
                 await _context.SaveChangesAsync();
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!_context.Products.Any(e => e.Id == id)) return NotFound();
+                if (!_context.Products.Any(e => e.Id == id))
+                    return NotFound();
+
                 throw;
             }
 
