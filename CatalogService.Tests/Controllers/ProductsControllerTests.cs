@@ -47,7 +47,7 @@ namespace CatalogService.Tests.Controllers
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
-            context.Products.Add(new Product { Id = 1, Name = "Product A", Price = 10.99M });
+            context.Products.Add(new Product { Name = "Product A", Price = 10.99M });
             await context.SaveChangesAsync();
 
             var controller = new ProductsController(context);
@@ -62,12 +62,22 @@ namespace CatalogService.Tests.Controllers
         }
 
         [Fact]
-        public async Task PostProduct_CreatesNewProduct()
+        public async Task PostProduct_CreatesNewProduct_WithAutoIncrementedId()
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
             var controller = new ProductsController(context);
-            var newProduct = new Product { Name = "Product A", Price = 10.99M };
+            var newProduct = new Product
+            {
+                Name = "Product A",
+                Description = "Test Product",
+                CostPrice = 100,
+                ProfitMargin = 60, // Above 55%
+                SalePrice = 180,  // Greater than Price
+                PromotionalPrice = 160, // Greater than Price
+                Category = "Category A",
+                Stock = 10
+            };
 
             // Act
             var result = await controller.PostProduct(newProduct);
@@ -75,8 +85,9 @@ namespace CatalogService.Tests.Controllers
             // Assert
             var actionResult = Assert.IsType<ActionResult<Product>>(result);
             var createdProduct = Assert.IsType<Product>(actionResult.Value);
-            Assert.Equal("Product A", createdProduct.Name);
 
+            Assert.Equal(1, createdProduct.Id); // First auto-incremented ID
+            Assert.Equal(160, createdProduct.Price); // CostPrice + 60% ProfitMargin
             Assert.Equal(1, context.Products.Count());
         }
 
