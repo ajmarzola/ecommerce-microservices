@@ -27,8 +27,11 @@ namespace CatalogService.Tests.Controllers
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
-            context.Products.Add(new Product { Id = 1, Name = "Product A", Price = 10.99M });
-            context.Products.Add(new Product { Id = 2, Name = "Product B", Price = 20.50M });
+            context.Database.EnsureDeleted(); // Reset database
+            context.Database.EnsureCreated(); // Recreate database schema
+
+            context.Products.Add(new Product { Name = "Product A", CostPrice = 100, ProfitMargin = 60, SalePrice = 180, PromotionalPrice = 160, Category = "Category A", Stock = 10 });
+            context.Products.Add(new Product { Name = "Product B", CostPrice = 200, ProfitMargin = 70, SalePrice = 400, PromotionalPrice = 350, Category = "Category B", Stock = 5 });
             await context.SaveChangesAsync();
 
             var controller = new ProductsController(context);
@@ -62,19 +65,22 @@ namespace CatalogService.Tests.Controllers
         }
 
         [Fact]
-        public async Task PostProduct_CreatesNewProduct_WithAutoIncrementedId()
+        public async Task PostProduct_CreatesNewProduct()
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
             var controller = new ProductsController(context);
             var newProduct = new Product
             {
                 Name = "Product A",
                 Description = "Test Product",
                 CostPrice = 100,
-                ProfitMargin = 60, // Above 55%
-                SalePrice = 180,  // Greater than Price
-                PromotionalPrice = 160, // Greater than Price
+                ProfitMargin = 60,
+                SalePrice = 180,
+                PromotionalPrice = 165,
                 Category = "Category A",
                 Stock = 10
             };
@@ -84,18 +90,67 @@ namespace CatalogService.Tests.Controllers
 
             // Assert
             var actionResult = Assert.IsType<ActionResult<Product>>(result);
-            var createdProduct = Assert.IsType<Product>(actionResult.Value);
 
-            Assert.Equal(1, createdProduct.Id); // First auto-incremented ID
-            Assert.Equal(160, createdProduct.Price); // CostPrice + 60% ProfitMargin
-            Assert.Equal(1, context.Products.Count());
+            // Aqui capturamos o `CreatedAtActionResult` e extraímos o valor do produto
+            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(actionResult.Result);
+            var createdProduct = Assert.IsType<Product>(createdAtActionResult.Value);
+
+            // Validar os dados do produto criado
+            Assert.NotNull(createdProduct);
+            Assert.NotEqual(0, createdProduct.Id); // Verifica se o ID foi gerado
+            Assert.Equal("Product A", createdProduct.Name);
+            Assert.Equal(160, createdProduct.Price); // CostPrice + ProfitMargin
+            Assert.Equal(1, context.Products.Count()); // Confirma que o produto foi adicionado ao banco
         }
+
+        [Fact]
+        public async Task PostProduct_CreatesNewProduct_WithAutoIncrementedId()
+        {
+            // Arrange
+            using var context = new CatalogContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
+            var controller = new ProductsController(context);
+            var newProduct = new Product
+            {
+                Name = "Product A",
+                Description = "Test Product",
+                CostPrice = 100, // Preço de custo válido
+                ProfitMargin = 60, // Margem de lucro >= 55%
+                SalePrice = 180,  // Maior que Price (calculado)
+                PromotionalPrice = 165, // Maior que Price
+                Category = "Category A",
+                Stock = 10
+            };
+
+            // Act
+            var result = await controller.PostProduct(newProduct);
+
+            // Assert
+            var actionResult = Assert.IsType<ActionResult<Product>>(result);
+
+            // Capturar o resultado do CreatedAtAction
+            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(actionResult.Result);
+            var createdProduct = Assert.IsType<Product>(createdAtActionResult.Value);
+
+            // Validar que o ID foi gerado automaticamente
+            Assert.NotNull(createdProduct);
+            Assert.True(createdProduct.Id > 0, "The Id should be greater than 0 for an auto-incremented field.");
+            Assert.Equal("Product A", createdProduct.Name);
+            Assert.Equal(160, createdProduct.Price); // Calculado com base no CostPrice e ProfitMargin
+            Assert.Equal(1, context.Products.Count()); // Banco contém um produto
+        }
+
 
         [Fact]
         public async Task PutProduct_UpdatesExistingProduct()
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
             context.Products.Add(new Product { Id = 1, Name = "Product A", Price = 10.99M });
             await context.SaveChangesAsync();
 
@@ -116,6 +171,9 @@ namespace CatalogService.Tests.Controllers
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
             context.Products.Add(new Product { Id = 1, Name = "Product A", Price = 10.99M });
             await context.SaveChangesAsync();
 
@@ -134,6 +192,9 @@ namespace CatalogService.Tests.Controllers
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
             var controller = new ProductsController(context);
 
             // Act
@@ -149,6 +210,9 @@ namespace CatalogService.Tests.Controllers
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
             var controller = new ProductsController(context);
             var updatedProduct = new Product { Id = 99, Name = "Nonexistent Product", Price = 15.99M }; // ID inexistente
 
@@ -164,6 +228,9 @@ namespace CatalogService.Tests.Controllers
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
             context.Products.Add(new Product { Id = 1, Name = "Product A", Price = 10.99M });
             await context.SaveChangesAsync();
 
@@ -182,6 +249,9 @@ namespace CatalogService.Tests.Controllers
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
             var controller = new ProductsController(context);
 
             // Act
@@ -196,15 +266,18 @@ namespace CatalogService.Tests.Controllers
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
             var controller = new ProductsController(context);
             var newProduct = new Product
             {
                 Name = "Product A",
                 Description = "Test Product",
-                CostPrice = 100,
-                ProfitMargin = 60, // Above 55%
-                SalePrice = 180,  // Greater than Price
-                PromotionalPrice = 160, // Greater than Price
+                CostPrice = 100, // Preço de custo válido
+                ProfitMargin = 60, // Margem de lucro >= 55%
+                SalePrice = 180,  // Maior que Price (calculado)
+                PromotionalPrice = 165, // Maior que Price
                 Category = "Category A",
                 Stock = 10
             };
@@ -214,10 +287,17 @@ namespace CatalogService.Tests.Controllers
 
             // Assert
             var actionResult = Assert.IsType<ActionResult<Product>>(result);
-            var createdProduct = Assert.IsType<Product>(actionResult.Value);
 
-            Assert.Equal(160, createdProduct.Price); // CostPrice + 60% ProfitMargin
-            Assert.Equal(1, context.Products.Count());
+            // Capturar o resultado do CreatedAtAction
+            var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(actionResult.Result);
+            var createdProduct = Assert.IsType<Product>(createdAtActionResult.Value);
+
+            // Validar os dados do produto criado
+            Assert.NotNull(createdProduct);
+            Assert.NotEqual(0, createdProduct.Id); // ID autoincrementado
+            Assert.Equal("Product A", createdProduct.Name);
+            Assert.Equal(160, createdProduct.Price); // Calculado com base no CostPrice e ProfitMargin
+            Assert.Equal(1, context.Products.Count()); // Banco contém um produto
         }
 
         [Fact]
@@ -225,15 +305,18 @@ namespace CatalogService.Tests.Controllers
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
             var controller = new ProductsController(context);
             var newProduct = new Product
             {
                 Name = "Product A",
                 Description = "Test Product",
                 CostPrice = 100,
-                ProfitMargin = 50, // Below 55%
+                ProfitMargin = 50, // Margem de lucro abaixo de 55%
                 SalePrice = 180,
-                PromotionalPrice = 160,
+                PromotionalPrice = 165,
                 Category = "Category A",
                 Stock = 10
             };
@@ -242,14 +325,24 @@ namespace CatalogService.Tests.Controllers
             var result = await controller.PostProduct(newProduct);
 
             // Assert
-            Assert.IsType<BadRequestObjectResult>(result);
+            var actionResult = Assert.IsType<ActionResult<Product>>(result);
+
+            // Verificar que o resultado é um BadRequestObjectResult
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(actionResult.Result);
+
+            // Validar a mensagem de erro retornada
+            Assert.Equal("ProfitMargin must be at least 55%.", badRequestResult.Value);
         }
+
 
         [Fact]
         public async Task PostProduct_ReturnsBadRequest_WhenSalePriceOrPromotionalPriceIsInvalid()
         {
             // Arrange
             using var context = new CatalogContext(_dbContextOptions);
+            context.Database.EnsureDeleted();
+            context.Database.EnsureCreated();
+
             var controller = new ProductsController(context);
             var newProduct = new Product
             {

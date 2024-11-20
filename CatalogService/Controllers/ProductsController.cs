@@ -44,6 +44,7 @@ namespace CatalogService.Controllers
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
+            // Certifique-se de retornar corretamente o produto criado
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
 
