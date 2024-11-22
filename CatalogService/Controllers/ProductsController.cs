@@ -5,6 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CatalogService.Controllers
 {
+    /// <summary>
+    /// Controller to manage products in the system.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
@@ -16,12 +19,25 @@ namespace CatalogService.Controllers
             _context = context;
         }
 
+        /// <summary>
+        /// Retrieves a list of all products.
+        /// </summary>
+        /// <returns>A list of products.</returns>
+        /// <response code="200">Returns the list of products.</response>
+        /// <response code="500">Internal server error.</response>
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Product>>> GetProducts()
         {
             return await _context.Products.ToListAsync();
         }
 
+        /// <summary>
+        /// Retrieves a product by its ID.
+        /// </summary>
+        /// <param name="id">The product ID.</param>
+        /// <returns>The product corresponding to the ID.</returns>
+        /// <response code="200">Returns the product.</response>
+        /// <response code="404">Product not found.</response>
         [HttpGet("{id}")]
         public async Task<ActionResult<Product>> GetProduct(int id)
         {
@@ -31,6 +47,13 @@ namespace CatalogService.Controllers
             return product;
         }
 
+        /// <summary>
+        /// Creates a new product.
+        /// </summary>
+        /// <param name="product">The object containing the product data to be created.</param>
+        /// <returns>The newly created product.</returns>
+        /// <response code="201">Product successfully created.</response>
+        /// <response code="400">Bad request.</response>
         [HttpPost]
         public async Task<ActionResult<Product>> PostProduct(Product product)
         {
@@ -58,6 +81,15 @@ namespace CatalogService.Controllers
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
 
+        /// <summary>
+        /// Updates an existing product.
+        /// </summary>
+        /// <param name="id">The product ID.</param>
+        /// <param name="product">The object containing the new product data.</param>
+        /// <returns>No content if the update is successful.</returns>
+        /// <response code="204">Product successfully updated.</response>
+        /// <response code="400">Bad request.</response>
+        /// <response code="404">Product not found.</response>
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProduct(int id, Product product)
         {
@@ -108,6 +140,12 @@ namespace CatalogService.Controllers
             return NoContent();
         }
 
+        /// <summary>
+        /// Deletes a product by its ID.
+        /// </summary>
+        /// <param name="id">The ID of the product to be deleted.</param>
+        /// <response code="204">Product successfully deleted.</response>
+        /// <response code="404">Product not found.</response>
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
