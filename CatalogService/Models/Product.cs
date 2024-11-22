@@ -57,5 +57,13 @@ namespace CatalogService.Models
         {
             return SalePrice > Price && PromotionalPrice > Price;
         }
+
+        /// <summary>
+        /// Validate ProfitMargin
+        /// </summary>
+        internal bool ValidadeProfitMargin()
+        {
+            return ProfitMargin >= 55;
+        }
     }
 }

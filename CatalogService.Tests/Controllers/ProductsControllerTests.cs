@@ -151,19 +151,41 @@ namespace CatalogService.Tests.Controllers
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
-            context.Products.Add(new Product { Id = 1, Name = "Product A", Price = 10.99M });
+            var product = new Product
+            {
+                Id = 1,
+                Name = "Existing Product",
+                Description = "Original Description",
+                CostPrice = 100,
+                ProfitMargin = 60,
+                SalePrice = 160,
+                Stock = 10,
+                Category = "Category A"
+            };
+
+            context.Products.Add(product);
             await context.SaveChangesAsync();
 
             var controller = new ProductsController(context);
-            var updatedProduct = new Product { Id = 1, Name = "Updated Product", Price = 12.99M };
+
+            product.Name = "Updated Product";
+            product.CostPrice = 80; // Preço de custo válido
+            product.SalePrice = 200;  // Maior que Price (calculado)
+            product.PromotionalPrice = 180; // Maior que Price
+            product.Stock = 15;
 
             // Act
-            var result = await controller.PutProduct(1, updatedProduct);
+            var result = await controller.PutProduct(product.Id, product);
 
             // Assert
             Assert.IsType<NoContentResult>(result);
-            var product = await context.Products.FindAsync(1);
-            Assert.Equal("Updated Product", product.Name);
+            var productInDb = await context.Products.FindAsync(product.Id);
+            Assert.NotNull(productInDb);
+            Assert.Equal("Updated Product", productInDb.Name);
+            Assert.Equal(80, productInDb.CostPrice);
+            Assert.Equal(200, productInDb.SalePrice);
+            Assert.Equal(15, productInDb.Stock);
+            Assert.Equal(180, productInDb.PromotionalPrice);
         }
 
         [Fact]
@@ -174,7 +196,18 @@ namespace CatalogService.Tests.Controllers
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
-            context.Products.Add(new Product { Id = 1, Name = "Product A", Price = 10.99M });
+            context.Products.Add(new Product
+            {
+                Id = 1,
+                Name = "Product A",
+                CostPrice = 100, // Preço de custo válido
+                ProfitMargin = 60, // Margem de lucro >= 55%
+                SalePrice = 180,  // Maior que Price (calculado)
+                PromotionalPrice = 165, // Maior que Price
+                Category = "Category A",
+                Stock = 10
+            });
+
             await context.SaveChangesAsync();
 
             var controller = new ProductsController(context);
@@ -214,7 +247,19 @@ namespace CatalogService.Tests.Controllers
             context.Database.EnsureCreated();
 
             var controller = new ProductsController(context);
-            var updatedProduct = new Product { Id = 99, Name = "Nonexistent Product", Price = 15.99M }; // ID inexistente
+
+            var updatedProduct = new Product
+            {
+                Id = 99,
+                Name = "Nonexistent Product",
+                Description = "Test Product",
+                CostPrice = 100,
+                ProfitMargin = 60,
+                SalePrice = 180,
+                PromotionalPrice = 165,
+                Category = "Category A",
+                Stock = 10
+            }; // ID inexistente
 
             // Act
             var result = await controller.PutProduct(99, updatedProduct);
@@ -231,17 +276,28 @@ namespace CatalogService.Tests.Controllers
             context.Database.EnsureDeleted();
             context.Database.EnsureCreated();
 
-            context.Products.Add(new Product { Id = 1, Name = "Product A", Price = 10.99M });
+            context.Products.Add(new Product
+            {
+                Id = 1,
+                Name = "Product A",
+                CostPrice = 100, // Preço de custo válido
+                ProfitMargin = 60, // Margem de lucro >= 55%
+                SalePrice = 180,  // Maior que Price (calculado)
+                PromotionalPrice = 165, // Maior que Price
+                Category = "Category A",
+                Stock = 10
+            });
+
             await context.SaveChangesAsync();
 
             var controller = new ProductsController(context);
-            var updatedProduct = new Product { Id = 2, Name = "Updated Product", Price = 12.99M }; // ID diferente
+            var updatedProduct = new Product { Id = 2, Name = "Updated Product" }; // ID diferente
 
             // Act
             var result = await controller.PutProduct(1, updatedProduct);
 
             // Assert
-            Assert.IsType<BadRequestResult>(result);
+            Assert.IsType<BadRequestObjectResult>(result);
         }
 
         [Fact]
@@ -360,7 +416,7 @@ namespace CatalogService.Tests.Controllers
             var result = await controller.PostProduct(newProduct);
 
             // Assert
-            Assert.IsType<BadRequestObjectResult>(result);
+            Assert.IsType<BadRequestObjectResult>(result.Result);
         }
     }
 }

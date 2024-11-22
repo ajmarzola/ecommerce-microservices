@@ -2,6 +2,7 @@
 using CatalogService.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace CatalogService.Controllers
 {
@@ -34,11 +35,21 @@ namespace CatalogService.Controllers
         [HttpPost]
         public async Task<ActionResult<Product>> PostProduct(Product product)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             product.CalculatePrice();
 
             if (!product.ValidatePrices())
             {
                 return BadRequest("SalePrice and PromotionalPrice must be greater than Price.");
+            }
+
+            if (!product.ValidadeProfitMargin())
+            {
+                return BadRequest("ProfitMargin must be at least 55%.");
             }
 
             _context.Products.Add(product);
@@ -51,8 +62,22 @@ namespace CatalogService.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> PutProduct(int id, Product product)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
             if (id != product.Id)
-                return BadRequest();
+            {
+                return BadRequest("Product ID mismatch.");
+            }
+
+            var existingProduct = _context.Products.Find(id);
+
+            if (existingProduct == null)
+            {
+                return NotFound();
+            }
 
             product.CalculatePrice();
 
@@ -61,7 +86,13 @@ namespace CatalogService.Controllers
                 return BadRequest("SalePrice and PromotionalPrice must be greater than Price.");
             }
 
-            _context.Entry(product).State = EntityState.Modified;
+            if (!product.ValidadeProfitMargin())
+            {
+                return BadRequest("ProfitMargin must be at least 55%.");
+            }
+
+            // Atualiza os valores do produto existente
+            _context.Entry(existingProduct).CurrentValues.SetValues(product);
 
             try
             {
