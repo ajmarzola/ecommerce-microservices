@@ -2,7 +2,6 @@
 using CatalogService.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace CatalogService.Controllers
 {
@@ -55,7 +54,7 @@ namespace CatalogService.Controllers
             _context.Products.Add(product);
             await _context.SaveChangesAsync();
 
-            // Certifique-se de retornar corretamente o produto criado
+            // Make sure to return the created product correctly
             return CreatedAtAction(nameof(GetProduct), new { id = product.Id }, product);
         }
 
@@ -91,7 +90,7 @@ namespace CatalogService.Controllers
                 return BadRequest("ProfitMargin must be at least 55%.");
             }
 
-            // Atualiza os valores do produto existente
+            // Update existing product values
             _context.Entry(existingProduct).CurrentValues.SetValues(product);
 
             try

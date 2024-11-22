@@ -91,16 +91,16 @@ namespace CatalogService.Tests.Controllers
             // Assert
             var actionResult = Assert.IsType<ActionResult<Product>>(result);
 
-            // Aqui capturamos o `CreatedAtActionResult` e extraímos o valor do produto
+            // Here we capture the `CreatedAtActionResult` and extract the product value
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(actionResult.Result);
             var createdProduct = Assert.IsType<Product>(createdAtActionResult.Value);
 
-            // Validar os dados do produto criado
+            // Validate the data of the created product
             Assert.NotNull(createdProduct);
-            Assert.NotEqual(0, createdProduct.Id); // Verifica se o ID foi gerado
+            Assert.NotEqual(0, createdProduct.Id); // Check if the ID was generated
             Assert.Equal("Product A", createdProduct.Name);
-            Assert.Equal(160, createdProduct.Price); // CostPrice + ProfitMargin
-            Assert.Equal(1, context.Products.Count()); // Confirma que o produto foi adicionado ao banco
+            Assert.Equal(160, createdProduct.Price); // Cost Price + Profit Margin
+            Assert.Equal(1, context.Products.Count()); // Confirms that the product has been added to the database
         }
 
         [Fact]
@@ -116,10 +116,10 @@ namespace CatalogService.Tests.Controllers
             {
                 Name = "Product A",
                 Description = "Test Product",
-                CostPrice = 100, // Preço de custo válido
-                ProfitMargin = 60, // Margem de lucro >= 55%
-                SalePrice = 180,  // Maior que Price (calculado)
-                PromotionalPrice = 165, // Maior que Price
+                CostPrice = 100, // Valid cost price
+                ProfitMargin = 60, // Profit margin >= 55%
+                SalePrice = 180,  // Greater than Price (calculated)
+                PromotionalPrice = 165, // Greater than Price
                 Category = "Category A",
                 Stock = 10
             };
@@ -130,16 +130,16 @@ namespace CatalogService.Tests.Controllers
             // Assert
             var actionResult = Assert.IsType<ActionResult<Product>>(result);
 
-            // Capturar o resultado do CreatedAtAction
+            // Capture the result of CreatedAtAction
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(actionResult.Result);
             var createdProduct = Assert.IsType<Product>(createdAtActionResult.Value);
 
-            // Validar que o ID foi gerado automaticamente
+            // Validate that the ID was automatically generated
             Assert.NotNull(createdProduct);
             Assert.True(createdProduct.Id > 0, "The Id should be greater than 0 for an auto-incremented field.");
             Assert.Equal("Product A", createdProduct.Name);
-            Assert.Equal(160, createdProduct.Price); // Calculado com base no CostPrice e ProfitMargin
-            Assert.Equal(1, context.Products.Count()); // Banco contém um produto
+            Assert.Equal(160, createdProduct.Price); // Calculated based on CostPrice and ProfitMargin
+            Assert.Equal(1, context.Products.Count()); // Database contains a product
         }
 
 
@@ -169,9 +169,9 @@ namespace CatalogService.Tests.Controllers
             var controller = new ProductsController(context);
 
             product.Name = "Updated Product";
-            product.CostPrice = 80; // Preço de custo válido
-            product.SalePrice = 200;  // Maior que Price (calculado)
-            product.PromotionalPrice = 180; // Maior que Price
+            product.CostPrice = 80; // Valid cost price
+            product.SalePrice = 200;  // Greater than Price (calculated)
+            product.PromotionalPrice = 180; // Greater than Price
             product.Stock = 15;
 
             // Act
@@ -200,10 +200,10 @@ namespace CatalogService.Tests.Controllers
             {
                 Id = 1,
                 Name = "Product A",
-                CostPrice = 100, // Preço de custo válido
-                ProfitMargin = 60, // Margem de lucro >= 55%
-                SalePrice = 180,  // Maior que Price (calculado)
-                PromotionalPrice = 165, // Maior que Price
+                CostPrice = 100, // Valid cost price
+                ProfitMargin = 60, // Profit margin >= 55%
+                SalePrice = 180,  // Greater than Price (calculated)
+                PromotionalPrice = 165, // Greater than Price
                 Category = "Category A",
                 Stock = 10
             });
@@ -231,7 +231,7 @@ namespace CatalogService.Tests.Controllers
             var controller = new ProductsController(context);
 
             // Act
-            var result = await controller.GetProduct(99); // ID inexistente
+            var result = await controller.GetProduct(99); // Non-existent ID
 
             // Assert
             var actionResult = Assert.IsType<ActionResult<Product>>(result);
@@ -250,7 +250,7 @@ namespace CatalogService.Tests.Controllers
 
             var updatedProduct = new Product
             {
-                Id = 99,
+                Id = 99, // Non-existent ID
                 Name = "Nonexistent Product",
                 Description = "Test Product",
                 CostPrice = 100,
@@ -259,7 +259,7 @@ namespace CatalogService.Tests.Controllers
                 PromotionalPrice = 165,
                 Category = "Category A",
                 Stock = 10
-            }; // ID inexistente
+            };
 
             // Act
             var result = await controller.PutProduct(99, updatedProduct);
@@ -280,10 +280,10 @@ namespace CatalogService.Tests.Controllers
             {
                 Id = 1,
                 Name = "Product A",
-                CostPrice = 100, // Preço de custo válido
-                ProfitMargin = 60, // Margem de lucro >= 55%
-                SalePrice = 180,  // Maior que Price (calculado)
-                PromotionalPrice = 165, // Maior que Price
+                CostPrice = 100, // Valid cost price
+                ProfitMargin = 60, // Profit margin >= 55%
+                SalePrice = 180,  // Greater than Price (calculated)
+                PromotionalPrice = 165, // Greater than Price
                 Category = "Category A",
                 Stock = 10
             });
@@ -311,7 +311,7 @@ namespace CatalogService.Tests.Controllers
             var controller = new ProductsController(context);
 
             // Act
-            var result = await controller.DeleteProduct(99); // ID inexistente
+            var result = await controller.DeleteProduct(99); // Non-existent ID
 
             // Assert
             Assert.IsType<NotFoundResult>(result);
@@ -330,10 +330,10 @@ namespace CatalogService.Tests.Controllers
             {
                 Name = "Product A",
                 Description = "Test Product",
-                CostPrice = 100, // Preço de custo válido
-                ProfitMargin = 60, // Margem de lucro >= 55%
-                SalePrice = 180,  // Maior que Price (calculado)
-                PromotionalPrice = 165, // Maior que Price
+                CostPrice = 100, // Valid cost price
+                ProfitMargin = 60, // Profit margin >= 55%
+                SalePrice = 180,  // Greater than Price (calculated)
+                PromotionalPrice = 165, // Greater than Price
                 Category = "Category A",
                 Stock = 10
             };
@@ -344,16 +344,16 @@ namespace CatalogService.Tests.Controllers
             // Assert
             var actionResult = Assert.IsType<ActionResult<Product>>(result);
 
-            // Capturar o resultado do CreatedAtAction
+            // Capture the result of CreatedAtAction
             var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(actionResult.Result);
             var createdProduct = Assert.IsType<Product>(createdAtActionResult.Value);
 
-            // Validar os dados do produto criado
+            // Validate the data of the created product
             Assert.NotNull(createdProduct);
-            Assert.NotEqual(0, createdProduct.Id); // ID autoincrementado
+            Assert.NotEqual(0, createdProduct.Id); // Auto-incremented ID
             Assert.Equal("Product A", createdProduct.Name);
-            Assert.Equal(160, createdProduct.Price); // Calculado com base no CostPrice e ProfitMargin
-            Assert.Equal(1, context.Products.Count()); // Banco contém um produto
+            Assert.Equal(160, createdProduct.Price); // Calculated based on CostPrice and ProfitMargin
+            Assert.Equal(1, context.Products.Count()); // Database contains a product
         }
 
         [Fact]
@@ -370,7 +370,7 @@ namespace CatalogService.Tests.Controllers
                 Name = "Product A",
                 Description = "Test Product",
                 CostPrice = 100,
-                ProfitMargin = 50, // Margem de lucro abaixo de 55%
+                ProfitMargin = 50, // Profit margin below 55%
                 SalePrice = 180,
                 PromotionalPrice = 165,
                 Category = "Category A",
@@ -383,10 +383,10 @@ namespace CatalogService.Tests.Controllers
             // Assert
             var actionResult = Assert.IsType<ActionResult<Product>>(result);
 
-            // Verificar que o resultado é um BadRequestObjectResult
+            // Check that the result is a BadRequestObjectResult
             var badRequestResult = Assert.IsType<BadRequestObjectResult>(actionResult.Result);
 
-            // Validar a mensagem de erro retornada
+            // Validate the returned error message
             Assert.Equal("ProfitMargin must be at least 55%.", badRequestResult.Value);
         }
 
