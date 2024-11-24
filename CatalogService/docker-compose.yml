@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - DOTNET_USE_POLLING_FILE_WATCHER=1
+      - ConnectionStrings__DefaultConnection=Server=PCZINDOANDERSON;Database=CatalogDb;User=user_dev;Password=masterkey;
+    depends_on:
+      - db
+    container_name: catalogservice
+  db:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    container_name: catalogdb
+    environment:
+      SA_PASSWORD: "M@sterK3y"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - catalogdb-data:/var/opt/mssql
+
+volumes:
+  catalogdb-data:
